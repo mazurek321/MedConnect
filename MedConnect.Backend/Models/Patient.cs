@@ -1,7 +1,8 @@
 namespace MedConnect.Backend.Models;
 
 public enum TriageColor { Unknown, Green, Yellow, Red }
-public class Patient{
+public class Patient
+{
     public Patient(){}
     private Patient(
         Guid id,
@@ -12,7 +13,8 @@ public class Patient{
         int? sbp, 
         string? symptoms, 
         TriageColor? color,
-        DateTime registrationTime
+        DateTime registrationTime,
+        Guid? userId
     )
     {
         Id = id;
@@ -24,6 +26,7 @@ public class Patient{
         Symptoms = symptoms;
         Color = color;
         RegistrationTime = registrationTime;
+        UserId = userId;
     }
 
     public Guid Id {get; private set;}
@@ -35,14 +38,34 @@ public class Patient{
     public string? Symptoms { get; private set; } = string.Empty;
     public TriageColor? Color { get; private set; }
     public DateTime RegistrationTime { get; private set; } 
+    public Guid? UserId { get; private set; }
+    public User? User { get; private set; }
 
     public static Patient NewPatient(
-        string name, string lastname, string pesel, int? heartRate = null, int? sbp = null, string? symptoms = null, TriageColor? color = TriageColor.Unknown
+        string name, string lastname, string pesel, int? heartRate = null, int? sbp = null, string? symptoms = null, TriageColor? color = TriageColor.Unknown, Guid? userId = null
     )
     {
         return new Patient(
-            Guid.NewGuid(), name, lastname, pesel, heartRate, sbp, symptoms ?? "not specified", color, DateTime.UtcNow
+            Guid.NewGuid(), name, lastname, pesel, heartRate, sbp, symptoms ?? "not specified", color, DateTime.UtcNow, userId
         );
     }
 
+    public void UpdatePatient(
+        string name, string lastname, string pesel, int? heartRate = null, int? sbp = null, string? symptoms = null, TriageColor? color = TriageColor.Unknown
+    )
+    {
+        Name = name;
+        Lastname = lastname;
+        Pesel = pesel;
+        HeartRate = heartRate;
+        SystolicBloodPressure = sbp;
+        Symptoms = symptoms;
+        Color = color;
+    }
+
+    public void LinkUserAccount(Guid userId)
+    {
+        if (UserId != null) throw new InvalidOperationException("This patient already has an account.");
+        UserId = userId;
+    }
 }

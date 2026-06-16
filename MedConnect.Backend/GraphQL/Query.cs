@@ -1,3 +1,4 @@
+using HotChocolate.Authorization;
 using MedConnect.Backend.Models;
 using MedConnect.Backend.Services;
 
@@ -5,6 +6,23 @@ namespace MedConnect.Backend.GraphQL;
 
 public class Query
 {
-    public Task<IEnumerable<Patient>> GetPatients([Service] PatientService patientService) 
-        => patientService.GetAllPatientsAsync();
+
+    
+    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    public async Task<IEnumerable<Patient>> BrowsePatients([Service] PatientService patientService) 
+    { 
+        return await patientService.BrowsePatients(); 
+    }
+
+    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    public async Task<Patient> GetPatient(Guid id, [Service] PatientService patientService)
+    {
+        return await patientService.GetPatient(id);
+    }
+
+    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    public async Task<User> GetMyData([Service] UserService userService)
+    {
+        return await userService.GetUserData();
+    }
 }

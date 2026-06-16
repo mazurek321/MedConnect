@@ -1,20 +1,31 @@
-using MedConnect.Backend.Data;
 using MedConnect.Backend.DTOs;
 using MedConnect.Backend.Models;
-using Microsoft.EntityFrameworkCore;
+using MedConnect.Backend.Repository;
 
 namespace MedConnect.Backend.Services;
 
 public class PatientService
 {
-    private readonly AppDbContext _context;
+    private readonly IPatientRepository _patientRepository;
 
-    public PatientService(AppDbContext context)
+    public PatientService(IPatientRepository patientRepository)
     {
-        _context = context;
+        _patientRepository = patientRepository;
     }
 
-    public async Task<IEnumerable<Patient>> GetAllPatientsAsync() => await _context.Patients.ToListAsync();
+    public async Task<IEnumerable<Patient>> BrowsePatients() { 
+        return await _patientRepository.BrowsePatients(); 
+    }
+
+    public async Task<Patient> GetPatient(Guid id)
+    {
+        var patient = await _patientRepository.GetPatientById(id);
+
+        if(patient is null)
+                throw new Exception("Patient not found.");
+
+        return patient;
+    }
 
     public async Task<Patient> AddPatientAsync(RegisterPatientDto dto)
     {
@@ -36,9 +47,35 @@ public class PatientService
             dto.Name, dto.Lastname, dto.Pesel, dto.HeartRate, dto.SystolicBloodPressure, dto.Symptoms, autoColor
         );
 
-        _context.Patients.Add(newPatient);
-        await _context.SaveChangesAsync(); 
+        await _patientRepository.AddAsync(newPatient);
 
         return newPatient;
+    }
+
+    public async Task<Patient> UpdatePatientAsync(UpdatePatientDto dto)
+    {
+        var patient = await GetPatient(dto.Id);
+        
+        patient.UpdatePatient(
+            dto.Name,
+            dto.Lastname,
+            dto.Pesel,
+            dto.HeartRate,
+            dto.SystolicBloodPressure,
+            dto.Symptoms
+        );
+
+        await _patientRepository.UpdateAsync(patient);
+
+        return patient;
+    }
+
+    public async Task<bool> DeletePatientAsync(Guid id)
+    {
+        var patient = await GetPatient(id);
+
+        await _patientRepository.DeleteAsync(patient);
+
+        return true;
     }
 }

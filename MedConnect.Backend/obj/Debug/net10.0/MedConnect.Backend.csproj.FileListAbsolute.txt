@@ -87,3 +87,14 @@ E:\projekty\MedConnect\MedConnect.Backend\obj\Debug\net10.0\refint\MedConnect.Ba
 E:\projekty\MedConnect\MedConnect.Backend\obj\Debug\net10.0\MedConnect.Backend.pdb
 E:\projekty\MedConnect\MedConnect.Backend\obj\Debug\net10.0\MedConnect.Backend.genruntimeconfig.cache
 E:\projekty\MedConnect\MedConnect.Backend\obj\Debug\net10.0\ref\MedConnect.Backend.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\BCrypt-Net-Next.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\HotChocolate.AspNetCore.Authorization.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Abstractions.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.JsonWebTokens.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Logging.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\Microsoft.IdentityModel.Tokens.dll
+E:\projekty\MedConnect\MedConnect.Backend\bin\Debug\net10.0\System.IdentityModel.Tokens.Jwt.dll
+E:\projekty\MedConnect\MedConnect.Backend\obj\Debug\net10.0\MedConnect.Backend.sourcelink.json

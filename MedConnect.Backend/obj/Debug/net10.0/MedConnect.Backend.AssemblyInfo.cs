@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("2dcc4457-e7a5-47ff-9164-bef0c1e2d012")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+598a3d3577390cf1be8d0769e4c82d8824f09933")]
 [assembly: System.Reflection.AssemblyProductAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
