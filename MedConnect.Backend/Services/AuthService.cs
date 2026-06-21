@@ -12,13 +12,13 @@ namespace MedConnect.Backend.Services;
 public class AuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IStaffRepository _staffRepository;
+    private readonly ICurrentUserContext _currentUserRepository;
     private readonly IConfiguration _configuration;
 
-    public AuthService(IUserRepository userRepository, IStaffRepository staffRepository, IConfiguration configuration)
+    public AuthService(IUserRepository userRepository, ICurrentUserContext currentUserContext, IConfiguration configuration)
     {
         _userRepository = userRepository;
-        _staffRepository = staffRepository;
+        _currentUserRepository = currentUserContext;
         _configuration = configuration;
     }
 
@@ -32,9 +32,9 @@ public class AuthService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Name, username),
-                new Claim(ClaimTypes.Role, role.ToString())
+                new Claim("sub", userId.ToString()),
+                new Claim("name", username),
+                new Claim("role", role.ToString())
             }),
             Expires = DateTime.UtcNow.AddHours(8),
             Issuer = _configuration["JwtSettings:Issuer"] ?? "MedConnectBackend",
@@ -59,15 +59,25 @@ public class AuthService
 
     public async Task<Staff> RegisterStaffAsync(RegisterStaffDto dto)
     {
+        var currentUserRole = _currentUserRepository.Role;
+        if(currentUserRole is null)
+            throw new Exception("User not logged in.");
+
         var existingUser = await _userRepository.GetByUsernameAsync(dto.Username);
         if (existingUser != null)
         {
             throw new Exception("Username is already taken.");
         }
 
+        if(dto.Role == UserRole.Admin)
+            throw new Exception("Cannot create admin.");
+
+        if(dto.Role == UserRole.Doctor && currentUserRole != UserRole.Admin)
+            throw new Exception("You dont have permissions to add a new doctor.");
+
         var newStaff = Staff.CreateAccount(dto.Username, dto.Name, dto.Lastname, dto.Password, dto.Role, dto.MedicalLicenseNumber);
         
-        await _staffRepository.AddAsync(newStaff);
+        await _userRepository.AddAsync(newStaff);
 
         return newStaff;
     }

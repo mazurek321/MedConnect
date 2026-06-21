@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using HotChocolate.Authorization;
 using MedConnect.Backend.Models;
 using MedConnect.Backend.Services;
@@ -20,9 +21,9 @@ public class Query
         return await patientService.GetPatient(id);
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+   [Authorize]
     public async Task<User> GetMyData([Service] UserService userService)
     {
-        return await userService.GetUserData();
+        return await userService.GetMyData();
     }
 }

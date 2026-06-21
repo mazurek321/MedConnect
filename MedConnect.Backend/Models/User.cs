@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MedConnect.Backend.Models;
 
 [InterfaceType("User")]
@@ -17,10 +19,11 @@ public abstract class User
         Role = role;
     }
 
-    public Guid Id { get; protected set; }
-    public string Username { get; protected set; } = string.Empty;
-    public string PasswordHash { get; protected set; } = string.Empty;
-    public UserRole Role { get; protected set; }
+    [Key]
+    public Guid Id { get; private set; }
+    public string Username { get; private set; } = string.Empty;
+    public string PasswordHash { get; private set; } = string.Empty;
+    public UserRole Role { get; private set; }
 
     public bool VerifyPassword(string plainPassword)
     {

@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+598a3d3577390cf1be8d0769e4c82d8824f09933")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15248c1f3faf90e5e4e9d6776ee2173025f76a1c")]
 [assembly: System.Reflection.AssemblyProductAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MedConnect.Backend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

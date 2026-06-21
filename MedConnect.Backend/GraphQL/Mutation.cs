@@ -13,6 +13,8 @@ public class Mutation
         return new string(token);
     }
 
+    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor)})]
+
     public async Task<Staff> RegisterStaff(RegisterStaffDto input, [Service] AuthService authService)
     {
         return await authService.RegisterStaffAsync(input);
@@ -43,5 +45,15 @@ public class Mutation
     )
     {
         return await patientService.DeletePatientAsync(id);
+    }
+
+    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    public async Task<Patient?> UpdateVitals(
+        Guid patientId,
+        UpdateVitalsDto input,
+        [Service] PatientService patientService
+    )
+    {
+        return await patientService.UpdateVitalsOfPatientAsync(patientId, input);
     }
 }

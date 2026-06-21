@@ -12,8 +12,8 @@ public class Staff : User
         Lastname = lastname;
         MedicalLicenseNumber = medicalLicenseNumber;        
     }
-    public string Name { get; protected set; } = string.Empty;
-    public string Lastname { get; protected set; } = string.Empty;
+    public string Name { get; private set; } = string.Empty;
+    public string Lastname { get; private set; } = string.Empty;
     public string MedicalLicenseNumber {get; private set; } = string.Empty;
 
     public static Staff CreateAccount(

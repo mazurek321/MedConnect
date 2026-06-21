@@ -32,12 +32,13 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtSettings["Issuer"] ?? "MedConnectBackend",
         ValidAudience = jwtSettings["Audience"] ?? "MedConnectFrontend",
-        IssuerSigningKey = new SymmetricSecurityKey(secretKey)
+        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+        NameClaimType = "name",
+        RoleClaimType = "role"
     };
 });
 
 builder.Services.AddAuthorization();
-
 builder.Services.AddOpenApi();
 
 var connectionString = builder.Configuration.GetConnectionString("PostgresConnection");
@@ -46,21 +47,20 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IStaffRepository, StaffRepository>();
 builder.Services.AddScoped<PatientService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
 
-
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
-
 
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<Query>()
     .AddMutationType<Mutation>()
     .ModifyRequestOptions(opt => opt.IncludeExceptionDetails = true)
+    .AddSubscriptionType<Subscription>()
+    .AddInMemorySubscriptions()
     .AddAuthorization()
     .AddType<UserRole>() 
     .AddType<User>() 
@@ -89,5 +89,6 @@ app.UseHttpsRedirection();
 app.UseAuthentication(); 
 app.UseAuthorization();
 
+app.UseWebSockets();
 app.MapGraphQL();
 app.Run();

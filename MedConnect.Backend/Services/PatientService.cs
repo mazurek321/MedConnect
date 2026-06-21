@@ -1,19 +1,24 @@
 using MedConnect.Backend.DTOs;
 using MedConnect.Backend.Models;
 using MedConnect.Backend.Repository;
+using HotChocolate.Subscriptions;
 
 namespace MedConnect.Backend.Services;
 
 public class PatientService
 {
     private readonly IPatientRepository _patientRepository;
+    private readonly ITopicEventSender _eventSender;
+    private static readonly Dictionary<Guid, AlertType> _activePatientAlerts = new();
 
-    public PatientService(IPatientRepository patientRepository)
+    public PatientService(IPatientRepository patientRepository, ITopicEventSender eventSender)
     {
         _patientRepository = patientRepository;
+        _eventSender = eventSender;
     }
 
-    public async Task<IEnumerable<Patient>> BrowsePatients() { 
+    public async Task<IEnumerable<Patient>> BrowsePatients() 
+    { 
         return await _patientRepository.BrowsePatients(); 
     }
 
@@ -22,29 +27,15 @@ public class PatientService
         var patient = await _patientRepository.GetPatientById(id);
 
         if(patient is null)
-                throw new Exception("Patient not found.");
+            throw new Exception("Patient not found.");
 
         return patient;
     }
 
     public async Task<Patient> AddPatientAsync(RegisterPatientDto dto)
     {
-        var autoColor = TriageColor.Green;
-        if (dto.HeartRate == null || dto.SystolicBloodPressure == null)
-        {
-            autoColor = TriageColor.Unknown;
-        }
-        else if (dto.HeartRate > 120 || dto.HeartRate < 45 || dto.SystolicBloodPressure < 90) 
-        {
-            autoColor = TriageColor.Red;
-        }
-        else if (dto.HeartRate > 100 || dto.SystolicBloodPressure > 150) 
-        {
-            autoColor = TriageColor.Yellow;
-        }
-
         var newPatient = Patient.NewPatient(
-            dto.Name, dto.Lastname, dto.Pesel, dto.HeartRate, dto.SystolicBloodPressure, dto.Symptoms, autoColor
+            dto.Name, dto.Lastname, dto.Pesel
         );
 
         await _patientRepository.AddAsync(newPatient);
@@ -59,10 +50,7 @@ public class PatientService
         patient.UpdatePatient(
             dto.Name,
             dto.Lastname,
-            dto.Pesel,
-            dto.HeartRate,
-            dto.SystolicBloodPressure,
-            dto.Symptoms
+            dto.Pesel
         );
 
         await _patientRepository.UpdateAsync(patient);
@@ -76,6 +64,172 @@ public class PatientService
 
         await _patientRepository.DeleteAsync(patient);
 
+        if (_activePatientAlerts.ContainsKey(id))
+             _activePatientAlerts.Remove(id);
+
         return true;
+    }
+
+    public async Task<Patient> UpdateVitalsOfPatientAsync(Guid id, UpdateVitalsDto dto)
+    {
+        var patient = await _patientRepository.GetPatientById(id);
+
+        if (patient is null)
+        {
+            throw new Exception("Patient not found!");
+        }
+
+        var newVitals = Vitals.NewVitals(
+            dto.HeartRate,
+            dto.SystolicBloodPressure,
+            dto.DiastolicBloodPressure,
+            dto.OxygenSaturation,
+            dto.Temperature
+        );
+
+        var evaluation = EvaluateVitals(newVitals);
+
+        patient.UpdateVitals(newVitals, evaluation.Color);
+
+        await _patientRepository.UpdateAsync(patient);
+        await ProcessVitalsAndSendAlertIfNeed(patient, evaluation.AlertLevel, evaluation.Issues);
+        
+        return patient;
+    }
+
+    public async Task ProcessVitalsAndSendAlertIfNeed(Patient patient, AlertType currentHighestAlert, List<string> issues)
+    {
+        var patientId = patient.Id;
+        var exists = await _patientRepository.GetPatientById(patientId);
+
+        if(exists is null)
+        {
+            throw new Exception("Patient does not exist.");
+        }
+
+        if (currentHighestAlert == AlertType.Normal)
+        {
+            if (_activePatientAlerts.ContainsKey(patientId))
+            {
+                _activePatientAlerts.Remove(patientId);
+            }
+            return;
+        }
+
+        if (_activePatientAlerts.TryGetValue(patientId, out var previousAlert))
+        {
+            if ((int)currentHighestAlert <= (int)previousAlert)
+            {
+                return;
+            }
+        }
+
+        _activePatientAlerts[patientId] = currentHighestAlert;
+
+        if(currentHighestAlert == AlertType.Warning)
+        {
+            var notification = Notification.NewNotification(
+                topic: $"Warning alert for patient {patient.Name} {patient.Lastname}",
+                message: $"Abnormal vital signs detected: {string.Join(", ", issues)}.",
+                type: AlertType.Warning,
+                reciptientRole: UserRole.Nurse
+            );
+
+            string topicName = $"Notifications_For_{UserRole.Nurse}";
+            await _eventSender.SendAsync(topicName, notification);
+        }
+
+        if(currentHighestAlert == AlertType.Critical)
+        {
+            var notification = Notification.NewNotification(
+                topic: $"Critical alert for patient {patient.Name} {patient.Lastname}",
+                message: $"Critical vital signs detected: {string.Join(", ", issues)}.",
+                type: AlertType.Critical,
+                reciptientRole: UserRole.Doctor
+            );
+
+            string doctorTopic = $"Notifications_For_{UserRole.Doctor}";
+            await _eventSender.SendAsync(doctorTopic, notification);
+
+            string nurseTopic = $"Notifications_For_{UserRole.Nurse}";
+            await _eventSender.SendAsync(nurseTopic, notification);
+        }
+    }
+
+    private (AlertType AlertLevel, TriageColor Color, List<string> Issues) EvaluateVitals(Vitals vitals)
+    {
+        if (vitals.HeartRate == null || vitals.SystolicBloodPressure == null || vitals.OxygenSaturation == null || vitals.Temperature == null)
+        {
+            return (AlertType.Normal, TriageColor.Unknown, new List<string>());
+        }
+
+        var issues = new List<string>();
+        var alertLevel = AlertType.Normal;
+
+        if (vitals.HeartRate < 50 || vitals.HeartRate > 120)
+        {
+            alertLevel = AlertType.Critical;
+            issues.Add($"Critical heart rate: {vitals.HeartRate} bpm (Norma: 60-100)");
+        }
+        else if (vitals.HeartRate < 60 || vitals.HeartRate > 100)
+        {
+            alertLevel = AlertType.Warning;
+            issues.Add($"Abnormal heart rate: {vitals.HeartRate} bpm");
+        }
+
+        if (vitals.OxygenSaturation < 90)
+        {
+            alertLevel = AlertType.Critical;
+            issues.Add($"Critical oxygen saturation: {vitals.OxygenSaturation}% (Norma: >95%)");
+        }
+        else if (vitals.OxygenSaturation < 95)
+        {
+            if (alertLevel < AlertType.Warning)
+            {
+                alertLevel = AlertType.Warning;
+            }
+            issues.Add($"Low oxygen saturation: {vitals.OxygenSaturation}%");
+        }
+
+        if (vitals.Temperature < 35.0 || vitals.Temperature > 39.0)
+        {
+            alertLevel = AlertType.Critical;
+            issues.Add($"Critical temperature: {vitals.Temperature}°C");
+        }
+        else if (vitals.Temperature < 36.0 || vitals.Temperature > 37.5)
+        {
+            if (alertLevel < AlertType.Warning)
+            {
+                alertLevel = AlertType.Warning;
+            }
+            issues.Add($"Abnormal temperature: {vitals.Temperature}°C");
+        }
+
+        if (vitals.SystolicBloodPressure < 90 || vitals.SystolicBloodPressure > 180)
+        {
+            alertLevel = AlertType.Critical;
+            issues.Add($"Critical blood pressure: {vitals.SystolicBloodPressure} mmHg");
+        }
+        else if (vitals.SystolicBloodPressure < 100 || vitals.SystolicBloodPressure > 140)
+        {
+            if (alertLevel < AlertType.Warning)
+            {
+                alertLevel = AlertType.Warning;
+            }
+            issues.Add($"Abnormal blood pressure: {vitals.SystolicBloodPressure} mmHg");
+        }
+
+        var color = TriageColor.Green;
+
+        if (alertLevel == AlertType.Critical)
+        {
+            color = TriageColor.Red;
+        }
+        else if (alertLevel == AlertType.Warning)
+        {
+            color = TriageColor.Yellow;
+        }
+
+        return (alertLevel, color, issues);
     }
 }

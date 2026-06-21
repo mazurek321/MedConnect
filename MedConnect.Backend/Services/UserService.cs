@@ -14,16 +14,17 @@ public class UserService
         _currentUser = currentUser;
     }
 
-    public async Task<User> GetUserData()
+    public async Task<User> GetMyData()
     {
+        
+        if (!_currentUser.IsAuthenticated || !_currentUser.Id.HasValue) 
+            throw new Exception("User is not logged in!");
 
-        if(!_currentUser.IsAuthenticated) throw new Exception("User is not logged in!");
+        var user = await _userRepository.GetUserAsync(_currentUser.Id.Value);
 
-        var user = await _userRepository.GetUserAsync(_currentUser.Id!.Value);
-
-        if (user is null) throw new Exception("User not found.");
+        if (user is null) 
+            throw new Exception("User not found.");
 
         return user;
     }
-    
 }
