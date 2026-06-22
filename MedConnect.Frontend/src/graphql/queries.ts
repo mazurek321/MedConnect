@@ -22,10 +22,14 @@ export const BROWSE_PATIENTS = gql`
       name
       lastname
       pesel
-      color
+      registrationTime
       vitals {
         heartRate
+        systolicBloodPressure
+        diastolicBloodPressure
         oxygenSaturation
+        temperature
+        color
       }
     }
   }

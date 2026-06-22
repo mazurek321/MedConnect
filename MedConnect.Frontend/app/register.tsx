@@ -14,7 +14,7 @@ import {
   KeyboardAvoidingView, 
   Platform 
 } from 'react-native';
-import { REGISTER_STAFF_MUTATION } from '../src/graphql/mutations';
+import { REGISTER_STAFF } from '../src/graphql/mutations';
 import { globalStyles } from '../src/styles/theme.styles';
 
 interface RegisterResponse {
@@ -33,7 +33,7 @@ export default function RegisterScreen() {
   const [licenseNumber, setLicenseNumber] = useState('');
   const [role, setRole] = useState('Nurse');
 
-  const [registerStaff, { loading }] = useMutation<RegisterResponse>(REGISTER_STAFF_MUTATION);
+  const [registerStaff, { loading }] = useMutation<RegisterResponse>(REGISTER_STAFF);
 
   const handleRegister = async () => {
     if (!username.trim() || !password.trim() || !name.trim() || !lastname.trim() || !licenseNumber.trim()) {

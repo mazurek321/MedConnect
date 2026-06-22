@@ -2,6 +2,8 @@ using MedConnect.Backend.DTOs;
 using MedConnect.Backend.Models;
 using MedConnect.Backend.Repository;
 using HotChocolate.Subscriptions;
+using MedConnect.Backend.GraphQL;
+using System.Collections.Concurrent;
 
 namespace MedConnect.Backend.Services;
 
@@ -9,7 +11,7 @@ public class PatientService
 {
     private readonly IPatientRepository _patientRepository;
     private readonly ITopicEventSender _eventSender;
-    private static readonly Dictionary<Guid, AlertType> _activePatientAlerts = new();
+    private static readonly ConcurrentDictionary<Guid, AlertType> _activePatientAlerts = new();
 
     public PatientService(IPatientRepository patientRepository, ITopicEventSender eventSender)
     {
@@ -39,6 +41,7 @@ public class PatientService
         );
 
         await _patientRepository.AddAsync(newPatient);
+        await _eventSender.SendAsync(nameof(Subscription.OnPatientUpdated), newPatient);
 
         return newPatient;
     }
@@ -54,6 +57,7 @@ public class PatientService
         );
 
         await _patientRepository.UpdateAsync(patient);
+        await _eventSender.SendAsync(nameof(Subscription.OnPatientUpdated), patient);
 
         return patient;
     }
@@ -64,8 +68,7 @@ public class PatientService
 
         await _patientRepository.DeleteAsync(patient);
 
-        if (_activePatientAlerts.ContainsKey(id))
-             _activePatientAlerts.Remove(id);
+        _activePatientAlerts.TryRemove(id, out _);
 
         return true;
     }
@@ -94,27 +97,14 @@ public class PatientService
         await _patientRepository.UpdateAsync(patient);
         await ProcessVitalsAndSendAlertIfNeed(patient, evaluation.AlertLevel, evaluation.Issues);
         
+        await _eventSender.SendAsync(nameof(Subscription.OnPatientUpdated), patient);
+        
         return patient;
     }
 
     public async Task ProcessVitalsAndSendAlertIfNeed(Patient patient, AlertType currentHighestAlert, List<string> issues)
     {
         var patientId = patient.Id;
-        var exists = await _patientRepository.GetPatientById(patientId);
-
-        if(exists is null)
-        {
-            throw new Exception("Patient does not exist.");
-        }
-
-        if (currentHighestAlert == AlertType.Normal)
-        {
-            if (_activePatientAlerts.ContainsKey(patientId))
-            {
-                _activePatientAlerts.Remove(patientId);
-            }
-            return;
-        }
 
         if (_activePatientAlerts.TryGetValue(patientId, out var previousAlert))
         {
@@ -138,8 +128,7 @@ public class PatientService
             string topicName = $"Notifications_For_{UserRole.Nurse}";
             await _eventSender.SendAsync(topicName, notification);
         }
-
-        if(currentHighestAlert == AlertType.Critical)
+        else if(currentHighestAlert == AlertType.Critical)
         {
             var notification = Notification.NewNotification(
                 topic: $"Critical alert for patient {patient.Name} {patient.Lastname}",
@@ -158,69 +147,54 @@ public class PatientService
 
     private (AlertType AlertLevel, TriageColor Color, List<string> Issues) EvaluateVitals(Vitals vitals)
     {
-        if (vitals.HeartRate == null || vitals.SystolicBloodPressure == null || vitals.OxygenSaturation == null || vitals.Temperature == null)
-        {
-            return (AlertType.Normal, TriageColor.Unknown, new List<string>());
-        }
-
         var issues = new List<string>();
         var alertLevel = AlertType.Normal;
 
         if (vitals.HeartRate < 50 || vitals.HeartRate > 120)
         {
-            alertLevel = AlertType.Critical;
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Critical);
             issues.Add($"Critical heart rate: {vitals.HeartRate} bpm (Norma: 60-100)");
         }
         else if (vitals.HeartRate < 60 || vitals.HeartRate > 100)
         {
-            alertLevel = AlertType.Warning;
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Warning);
             issues.Add($"Abnormal heart rate: {vitals.HeartRate} bpm");
         }
 
         if (vitals.OxygenSaturation < 90)
         {
-            alertLevel = AlertType.Critical;
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Critical);
             issues.Add($"Critical oxygen saturation: {vitals.OxygenSaturation}% (Norma: >95%)");
         }
         else if (vitals.OxygenSaturation < 95)
         {
-            if (alertLevel < AlertType.Warning)
-            {
-                alertLevel = AlertType.Warning;
-            }
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Warning);
             issues.Add($"Low oxygen saturation: {vitals.OxygenSaturation}%");
         }
 
         if (vitals.Temperature < 35.0 || vitals.Temperature > 39.0)
         {
-            alertLevel = AlertType.Critical;
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Critical);
             issues.Add($"Critical temperature: {vitals.Temperature}°C");
         }
         else if (vitals.Temperature < 36.0 || vitals.Temperature > 37.5)
         {
-            if (alertLevel < AlertType.Warning)
-            {
-                alertLevel = AlertType.Warning;
-            }
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Warning);
             issues.Add($"Abnormal temperature: {vitals.Temperature}°C");
         }
 
         if (vitals.SystolicBloodPressure < 90 || vitals.SystolicBloodPressure > 180)
         {
-            alertLevel = AlertType.Critical;
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Critical);
             issues.Add($"Critical blood pressure: {vitals.SystolicBloodPressure} mmHg");
         }
         else if (vitals.SystolicBloodPressure < 100 || vitals.SystolicBloodPressure > 140)
         {
-            if (alertLevel < AlertType.Warning)
-            {
-                alertLevel = AlertType.Warning;
-            }
+            alertLevel = GetMaxAlert(alertLevel, AlertType.Warning);
             issues.Add($"Abnormal blood pressure: {vitals.SystolicBloodPressure} mmHg");
         }
 
         var color = TriageColor.Green;
-
         if (alertLevel == AlertType.Critical)
         {
             color = TriageColor.Red;
@@ -231,5 +205,10 @@ public class PatientService
         }
 
         return (alertLevel, color, issues);
+    }
+
+    private AlertType GetMaxAlert(AlertType current, AlertType incoming)
+    {
+        return (int)incoming > (int)current ? incoming : current;
     }
 }

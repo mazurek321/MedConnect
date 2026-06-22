@@ -1,0 +1,194 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+.center-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.error-text {
+  color: #ef4444;
+}
+
+.simulator-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+.sidebar {
+  width: 320px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 20px;
+}
+
+.patient-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.patient-item {
+  width: 100%;
+  padding: 14px 16px;
+  background-color: #f1f5f9;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.patient-item:hover {
+  background-color: #e2e8f0;
+}
+
+.patient-item.active {
+  background-color: #dbeafe;
+  border-color: #3b82f6;
+}
+
+.patient-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.patient-item.active .patient-name {
+  color: #1d4ed8;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.empty-state {
+  margin-top: 100px;
+  color: #64748b;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.control-panel {
+  width: 100%;
+  max-width: 600px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 32px;
+}
+
+.panel-header {
+  margin-bottom: 24px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 16px;
+}
+
+.panel-header h2 {
+  font-size: 1.5rem;
+  color: #0f172a;
+}
+
+.patient-id {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  display: block;
+  margin-top: 4px;
+}
+
+.btn-toggle {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  margin-bottom: 28px;
+  transition: background-color 0.2s;
+}
+
+.btn-toggle.start {
+  background-color: #16a34a;
+}
+
+.btn-toggle.start:hover {
+  background-color: #15803d;
+}
+
+.btn-toggle.stop {
+  background-color: #dc2626;
+}
+
+.btn-toggle.stop:hover {
+  background-color: #b91c1c;
+}
+
+.sliders-form {
+  border: none;
+}
+
+.sliders-form:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.value-badge {
+  background-color: #f1f5f9;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #1e293b;
+}
+
+input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+}

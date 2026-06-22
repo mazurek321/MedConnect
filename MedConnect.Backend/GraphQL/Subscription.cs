@@ -14,4 +14,12 @@ public class Subscription
     {
         return notification;
     }
+
+    [Subscribe]
+    [Topic(nameof(Subscription.OnPatientUpdated))]
+    public Patient OnPatientUpdated([EventMessage] Patient patient)
+    {
+        Console.WriteLine("UPDATE PATIENT SUBSCRIPTION");
+        return patient;
+    }
 }

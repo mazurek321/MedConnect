@@ -13,14 +13,13 @@ public class Mutation
         return new string(token);
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor)})]
-
+    [Authorize]
     public async Task<Staff> RegisterStaff(RegisterStaffDto input, [Service] AuthService authService)
     {
         return await authService.RegisterStaffAsync(input);
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<Patient> RegisterPatient(
         RegisterPatientDto input,
         [Service] PatientService patientService
@@ -29,7 +28,7 @@ public class Mutation
         return await patientService.AddPatientAsync(input); 
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<Patient> UpdatePatient(
         UpdatePatientDto input,
         [Service] PatientService patientService
@@ -38,7 +37,7 @@ public class Mutation
         return await patientService.UpdatePatientAsync(input);
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<bool> DeletePatient(
         Guid id,
         [Service] PatientService patientService
@@ -47,8 +46,20 @@ public class Mutation
         return await patientService.DeletePatientAsync(id);
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<Patient?> UpdateVitals(
+        Guid patientId,
+        UpdateVitalsDto input,
+        [Service] PatientService patientService
+    )
+    {
+        return await patientService.UpdateVitalsOfPatientAsync(patientId, input);
+    }
+
+
+
+
+    public async Task<Patient?> UpdateVitalsSimuation(
         Guid patientId,
         UpdateVitalsDto input,
         [Service] PatientService patientService

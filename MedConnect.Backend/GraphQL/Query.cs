@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using HotChocolate.Authorization;
 using MedConnect.Backend.Models;
 using MedConnect.Backend.Services;
@@ -9,13 +8,13 @@ public class Query
 {
 
     
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<IEnumerable<Patient>> BrowsePatients([Service] PatientService patientService) 
     { 
         return await patientService.BrowsePatients(); 
     }
 
-    [Authorize(Roles = new[]{nameof(UserRole.Admin), nameof(UserRole.Doctor), nameof(UserRole.Nurse)})]
+    [Authorize]
     public async Task<Patient> GetPatient(Guid id, [Service] PatientService patientService)
     {
         return await patientService.GetPatient(id);
@@ -25,5 +24,12 @@ public class Query
     public async Task<User> GetMyData([Service] UserService userService)
     {
         return await userService.GetMyData();
+    }
+
+
+
+    public async Task<IEnumerable<Patient>> BrowsePatientsForSimulation([Service] PatientService patientService) 
+    { 
+        return await patientService.BrowsePatients(); 
     }
 }

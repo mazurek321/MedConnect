@@ -7,10 +7,14 @@ export const ON_PATIENT_UPDATED = gql`
       name
       lastname
       pesel
-      color
+      registrationTime
       vitals {
         heartRate
+        systolicBloodPressure
+        diastolicBloodPressure
         oxygenSaturation
+        temperature
+        color
       }
     }
   }

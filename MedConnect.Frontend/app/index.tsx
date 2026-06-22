@@ -14,7 +14,7 @@ import {
   KeyboardAvoidingView, 
   Platform 
 } from 'react-native';
-import { LOGIN_MUTATION } from '../src/graphql/mutations';
+import { LOGIN } from '../src/graphql/mutations';
 import { globalStyles } from '../src/styles/theme.styles';
 import { client } from '../src/api/apollo';
 
@@ -26,7 +26,7 @@ export default function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const [login, { loading }] = useMutation<LoginResponse>(LOGIN_MUTATION);
+  const [login, { loading }] = useMutation<LoginResponse>(LOGIN);
 
   const handleLogin = async function () {
     if (!username.trim() || !password.trim()) {

@@ -1,12 +1,12 @@
 import { gql } from '@apollo/client';
 
-export const LOGIN_MUTATION = gql`
+export const LOGIN = gql`
   mutation Login($input: LoginDtoInput!) {
     login(input: $input)
   }
 `;
 
-export const REGISTER_STAFF_MUTATION = gql`
+export const REGISTER_STAFF = gql`
   mutation RegisterStaff($input: RegisterStaffDtoInput!) {
     registerStaff(input: $input) {
       id
@@ -16,11 +16,29 @@ export const REGISTER_STAFF_MUTATION = gql`
   }
 `;
 
+
+
 export const UPDATE_VITALS = gql`
   mutation UpdateVitals($patientId: UUID!, $input: UpdateVitalsDtoInput!) {
     updateVitals(patientId: $patientId, input: $input) {
       id
-      color
+      vitals {
+        heartRate
+        systolicBloodPressure
+        diastolicBloodPressure
+        oxygenSaturation
+        temperature
+      }
+    }
+  }
+`;
+
+export const REGISTER_PATIENT = gql`
+  mutation RegisterPatient($input: RegisterPatientDtoInput!) {
+    registerPatient(input: $input) {
+      name
+      lastname
+      pesel
     }
   }
 `;
