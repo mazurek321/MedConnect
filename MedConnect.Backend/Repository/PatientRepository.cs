@@ -34,6 +34,11 @@ public class PatientRepository : IPatientRepository
         return await _context.Patients.FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<Patient?> GetPatientByPesel(string pesel)
+    {
+        return await _context.Patients.FirstOrDefaultAsync(p => p.Pesel == pesel);
+    }
+
     public async Task DeleteAsync(Patient patient)
     {
          _context.Patients.Remove(patient);

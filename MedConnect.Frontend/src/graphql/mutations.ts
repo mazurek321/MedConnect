@@ -38,6 +38,8 @@ export const REGISTER_PATIENT = gql`
     registerPatient(input: $input) {
       name
       lastname
+      sex
+      dateOfBirth
       pesel
     }
   }

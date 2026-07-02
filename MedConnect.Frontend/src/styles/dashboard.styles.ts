@@ -52,5 +52,15 @@ export const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginTop: 10,
     width: '100%',
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 6,
+  },
+  switchLabel: {
+    fontSize: 15,
+    color: '#374151',
   }
 });

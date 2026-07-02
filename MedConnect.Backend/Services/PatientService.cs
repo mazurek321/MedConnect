@@ -36,14 +36,41 @@ public class PatientService
 
     public async Task<Patient> AddPatientAsync(RegisterPatientDto dto)
     {
+        var patient = await _patientRepository.GetPatientByPesel(dto.Pesel);
+
+        if(patient is not null)
+            throw new Exception("Patient already exists.");
+
         var newPatient = Patient.NewPatient(
-            dto.Name, dto.Lastname, dto.Pesel
+            dto.Name, dto.Lastname, dto.Sex, dto.DateOfBirth, dto.Pesel
         );
 
         await _patientRepository.AddAsync(newPatient);
         await _eventSender.SendAsync(nameof(Subscription.OnPatientUpdated), newPatient);
 
         return newPatient;
+    }
+
+    public async Task<Interview> AddInterviewToPatient(InterviewDto dto)
+    {
+        var patient = await GetPatient(dto.PatientId);
+
+        var interview = Interview.NewInterview(
+            dto.PatientId,
+            dto.ChestPain,
+            dto.Dyspnea,
+            dto.AbdominalPain,
+            dto.Headache,
+            dto.Cough,
+            dto.Hypertension,
+            dto.Diabetes
+        );
+
+        patient.AddInterview(interview);
+        
+        await _patientRepository.UpdateAsync(patient);
+        
+        return interview;
     }
 
     public async Task<Patient> UpdatePatientAsync(UpdatePatientDto dto)
@@ -75,12 +102,7 @@ public class PatientService
 
     public async Task<Patient> UpdateVitalsOfPatientAsync(Guid id, UpdateVitalsDto dto)
     {
-        var patient = await _patientRepository.GetPatientById(id);
-
-        if (patient is null)
-        {
-            throw new Exception("Patient not found!");
-        }
+        var patient = await GetPatient(id);
 
         var newVitals = Vitals.NewVitals(
             dto.HeartRate,

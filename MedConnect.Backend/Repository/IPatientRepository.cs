@@ -8,5 +8,6 @@ public interface IPatientRepository
     Task<IEnumerable<Patient>> BrowsePatients();
     Task UpdateAsync(Patient patient);
     Task<Patient?> GetPatientById(Guid id);
+    Task<Patient?> GetPatientByPesel(string pesel);
     Task DeleteAsync(Patient patient);
 }

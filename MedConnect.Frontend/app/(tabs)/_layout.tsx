@@ -34,7 +34,7 @@ export default function TabsLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      {/* <Tabs.Screen
         name="notifications"
         options={{
           title: 'Powiadomienia',
@@ -43,7 +43,7 @@ export default function TabsLayout() {
             <Ionicons name="notifications" size={size} color={color} />
           ),
         }}
-      />
+      /> */}
       <Tabs.Screen
         name="profile"
         options={{

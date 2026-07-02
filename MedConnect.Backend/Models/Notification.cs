@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace MedConnect.Backend.Models;
 
 public class Notification
@@ -14,6 +16,7 @@ public class Notification
         ReciptientRole = reciptientRole;
     }
 
+    [Key]
     public Guid Id { get; private set; }
     public string Topic { get; private set; } = string.Empty;
     public string Message { get; private set; } = string.Empty;

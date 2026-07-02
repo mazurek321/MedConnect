@@ -56,6 +56,12 @@ public class Mutation
         return await patientService.UpdateVitalsOfPatientAsync(patientId, input);
     }
 
+    [Authorize]
+    public async Task<Interview> AddInterview(InterviewDto dto, [Service] PatientService patientService)
+    {
+        return await patientService.AddInterviewToPatient(dto);
+    }
+
 
 
 

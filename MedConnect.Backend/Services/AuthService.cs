@@ -65,15 +65,10 @@ public class AuthService
 
         var existingUser = await _userRepository.GetByUsernameAsync(dto.Username);
         if (existingUser != null)
-        {
             throw new Exception("Username is already taken.");
-        }
 
-        if(dto.Role == UserRole.Admin)
-            throw new Exception("Cannot create admin.");
-
-        if(dto.Role == UserRole.Doctor && currentUserRole != UserRole.Admin)
-            throw new Exception("You dont have permissions to add a new doctor.");
+        if(dto.Role == UserRole.Admin || dto.Role == UserRole.Doctor && currentUserRole != UserRole.Admin)
+            throw new Exception("You dont have permissions to create user with that role.");
 
         var newStaff = Staff.CreateAccount(dto.Username, dto.Name, dto.Lastname, dto.Password, dto.Role, dto.MedicalLicenseNumber);
         
