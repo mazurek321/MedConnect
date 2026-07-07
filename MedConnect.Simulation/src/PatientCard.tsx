@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useMutation } from '@apollo/client/react';
 import { UPDATE_VITALS } from '../src/graphql/graphql';
 import { type Patient, type Vitals } from '../src/types/patient';
@@ -12,6 +12,9 @@ export default function PatientCard({ patient }: { patient: Patient }) {
     temperature: patient.vitals?.temperature ?? null,
   });
 
+  const [activeSimulation, setActiveSimulation] = useState<'normal' | 'critical' | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  
   const [updateVitals, { loading }] = useMutation(UPDATE_VITALS, {
     onError: (error) => {
       console.error(error);
@@ -31,12 +34,109 @@ export default function PatientCard({ patient }: { patient: Patient }) {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    handleStopSimulation();
     updateVitals({ variables: { patientId: patient.id, input: vitalsForm } });
   };
 
+  const getRandom = (min: number, max: number, decimals = 0) => {
+    const num = Math.random() * (max - min) + min;
+    return parseFloat(num.toFixed(decimals));
+  };
+
+  const generateVitals = (type: 'normal' | 'critical'): Vitals => {
+    if (type === 'normal') {
+      return {
+        heartRate: getRandom(65, 80),
+        systolicBloodPressure: getRandom(120, 128),
+        diastolicBloodPressure: getRandom(80, 84),
+        oxygenSaturation: getRandom(96, 99),
+        temperature: getRandom(36.5, 36.9, 1),
+      };
+    } else {
+      return {
+        heartRate: getRandom(130, 160),
+        systolicBloodPressure: getRandom(165, 190),
+        diastolicBloodPressure: getRandom(100, 115),
+        oxygenSaturation: getRandom(82, 88),
+        temperature: getRandom(39.5, 41.0, 1),
+      };
+    }
+  };
+
+  const handleStartSimulation = (type: 'normal' | 'critical') => {
+    handleStopSimulation();
+    setActiveSimulation(type);
+
+    const runSimulation = () => {
+      const nextVitals = generateVitals(type);
+      setVitalsForm(nextVitals);
+      updateVitals({ variables: { patientId: patient.id, input: nextVitals } });
+    };
+
+    runSimulation();
+    intervalRef.current = setInterval(runSimulation, 3000);
+  };
+
+  const handleStopSimulation = () => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    setActiveSimulation(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, []);
+
   return (
     <div style={{ border: '1px solid #ccc', padding: '16px', margin: '16px 0', borderRadius: '8px' }}>
-      <h3>{patient.name} {patient.lastname} (PESEL: {patient.pesel})</h3>
+      <h3>{patient.name} {patient.lastname}</h3>
+      
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+        <button 
+          type="button" 
+          onClick={() => handleStartSimulation('normal')} 
+          style={{ 
+            padding: '6px 12px', 
+            background: activeSimulation === 'normal' ? '#c4dfb4' : '#e2f0d9', 
+            color: '#385723', 
+            border: activeSimulation === 'normal' ? '2px solid #385723' : '1px solid #a9d18e', 
+            borderRadius: '4px', 
+            cursor: 'pointer',
+            fontWeight: activeSimulation === 'normal' ? 'bold' : 'normal'
+          }}
+        >
+          Symuluj stan normalny
+        </button>
+        <button 
+          type="button" 
+          onClick={() => handleStartSimulation('critical')} 
+          style={{ 
+            padding: '6px 12px', 
+            background: activeSimulation === 'critical' ? '#f8cdb2' : '#fce4d6', 
+            color: '#c65911', 
+            border: activeSimulation === 'critical' ? '2px solid #c65911' : '1px solid #f8cbad', 
+            borderRadius: '4px', 
+            cursor: 'pointer',
+            fontWeight: activeSimulation === 'critical' ? 'bold' : 'normal'
+          }}
+        >
+          Symuluj stan krytyczny
+        </button>
+        {activeSimulation && (
+          <button 
+            type="button" 
+            onClick={handleStopSimulation} 
+            style={{ padding: '6px 12px', background: '#f4f4f4', color: '#333', border: '1px solid #ccc', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Stop
+          </button>
+        )}
+      </div>
+
       <form onSubmit={handleSave} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <label>
           Tętno (HR):<br />
@@ -64,7 +164,7 @@ export default function PatientCard({ patient }: { patient: Patient }) {
         </label>
 
         <button type="submit" disabled={loading} style={{ padding: '5px 15px', cursor: 'pointer' }}>
-          {loading ? 'Zapisywanie...' : 'Zapisz'}
+          {loading ? 'Zapisywanie...' : 'Zapisz manualnie'}
         </button>
       </form>
     </div>
